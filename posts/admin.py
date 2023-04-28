@@ -6,7 +6,7 @@ from posts.models import Post, Like, Comment
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
     list_display = ['id', 'user', 'content', 'image',
-                    'video', 'created_at', 'updated_at']
+                    'video', 'total_likes', 'total_comments']
 
 
 @admin.register(Like)
