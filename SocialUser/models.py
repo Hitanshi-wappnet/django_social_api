@@ -27,4 +27,4 @@ class Message(models.Model):
     is_read = models.BooleanField(default=False)
 
     class Meta:
-        ordering = ('timestamp',)
+        ordering = ('-timestamp',)

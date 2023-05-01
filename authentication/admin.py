@@ -1,11 +1,16 @@
 from django.contrib import admin
-from authentication.models import VerifyOtp
+from authentication.models import VerifyOtp, UserActivationOtp
 from authentication.models import User
 
 
 # Registation of Forget Password Model
 @admin.register(VerifyOtp)
 class VerifyOtpAdmin(admin.ModelAdmin):
+    fields = ["user", "otp"]
+
+
+@admin.register(UserActivationOtp)
+class UserActivationOtpAdmin(admin.ModelAdmin):
     fields = ["user", "otp"]
 
 

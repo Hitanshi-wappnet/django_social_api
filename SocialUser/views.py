@@ -7,6 +7,8 @@ from authentication.models import User
 from SocialUser.serializers import FollowSerializer, MessageSerializer
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
+import threading
+from services.send_mail import send_mail
 
 
 class FollowUserView(APIView):
@@ -131,6 +133,7 @@ class SendMessageView(APIView):
         content = request.data.get('message')
         # Check if recipient ID is exist or not
         if User.objects.filter(id=pk).exists():
+            email = User.objects.get(id=pk).email
             # Get the sender, receiver and message content from requested data
             data = {'sender': request.user.id,
                     'receiver': pk,
@@ -140,6 +143,13 @@ class SendMessageView(APIView):
             # If serializer is valid then can send the message
             if serializer.is_valid():
                 serializer.save()
+                threading.Thread(
+                    target=send_mail,
+                    kwargs={
+                        "subject": "About Messages on Post",
+                        "content": f"You received new message from {request.user}",
+                        "recipient_list": [email]
+                    }).start()
                 response = {
                     'status': True,
                     'message': 'Message Sent Successfully',

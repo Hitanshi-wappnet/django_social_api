@@ -30,8 +30,15 @@ class User(AbstractUser):
     objects = UserManager()
 
 
-# Create your models here.
 class VerifyOtp(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,
+                             on_delete=models.CASCADE)
+    otp = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class UserActivationOtp(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE)
     otp = models.IntegerField()

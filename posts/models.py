@@ -2,6 +2,17 @@ from django.db import models
 from authentication.models import User
 
 
+class Hashtag(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.name
+
+
 class Post(models.Model):
 
     id = models.AutoField(primary_key=True)
@@ -12,6 +23,7 @@ class Post(models.Model):
     video = models.FileField(upload_to='posts/videos/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    hashtags = models.ManyToManyField(Hashtag)
     total_likes = models.IntegerField(default=0)
     total_comments = models.IntegerField(default=0)
 

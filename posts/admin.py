@@ -1,5 +1,10 @@
 from django.contrib import admin
-from posts.models import Post, Like, Comment
+from posts.models import Post, Like, Comment, Hashtag
+
+
+@admin.register(Hashtag)
+class HashtagAdmin(admin.ModelAdmin):
+    list_display = ['id', 'name', 'created_at']
 
 
 # Registation of Forget Password Model

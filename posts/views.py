@@ -7,6 +7,8 @@ from posts.models import Post
 from django.db.models import Q
 from posts.serializers import PostSerializer, LikeSerializer, CommentSerializer
 from posts.pagination import CustomPagination
+import threading
+from services.send_mail import send_mail
 
 
 class PostView(APIView):
@@ -26,7 +28,9 @@ class PostView(APIView):
         returns success response else return error response
         '''
         if serializer.is_valid():
+            self.perform_create(serializer)
             serializer.save(user=request.user)
+            # Post.save()
             response = {"status": True,
                         "message": "Your Post added successfully"}
             return Response(data=response, status=status.HTTP_201_CREATED)
@@ -36,6 +40,9 @@ class PostView(APIView):
                         "data": None}
             return Response(data=response,
                             status=status.HTTP_400_BAD_REQUEST)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
 
 class PostSearchView(APIView):
@@ -95,6 +102,13 @@ class LikeView(APIView):
             # check serializer is valid or not
             if serializer.is_valid():
                 serializer.save(user=request.user, post=post)
+                threading.Thread(
+                    target=send_mail,
+                    kwargs={
+                        "subject": "About Likes on Post",
+                        "content": f"{request.user} liked Your Post",
+                        "recipient_list": [post.user.email]
+                    }).start()
                 response = {
                     "status": True,
                     "message": "Your Like is added in the post"
@@ -130,6 +144,16 @@ class CommentView(APIView):
             # If Serializer is valid then save it with user and post
             if serializer.is_valid():
                 serializer.save(user=request.user, post=post)
+
+                # Notifications of email when user add comment
+                threading.Thread(
+                    target=send_mail,
+                    kwargs={
+                        "subject": "About Comments on Post",
+                        "content": f"{request.user} commented on Your Post",
+                        "recipient_list": [post.user.email]
+                    }).start()
+
                 response = {
                     "status": True,
                     "message": "Your Comment is added in the post"
