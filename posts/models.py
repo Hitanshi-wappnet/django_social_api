@@ -30,6 +30,19 @@ class Post(models.Model):
     class Meta:
         ordering = ['-created_at']
 
+    def save(self, *args, **kwargs):
+        # Check if the current instance is new or existing
+        is_new = self.pk is None
+        # Save the current instance
+        super(Post, self).save(*args, **kwargs)
+        # If the current instance is new
+        if is_new:
+            # Count the number of posts associated with the user
+            # and update user's total_posts attribute
+            self.user.total_posts = self.user.post_set.count()
+            # Save the updated user object to the database
+            self.user.save()
+
     def __str__(self):
         return str(self.id)
 

@@ -26,6 +26,7 @@ class User(AbstractUser):
     birth_date = models.DateField(null=True, blank=True)
     followers = models.IntegerField(default=0, editable=False)
     following = models.IntegerField(default=0, editable=False)
+    total_posts = models.IntegerField(default=0, editable=False)
 
     objects = UserManager()
 

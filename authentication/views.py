@@ -50,12 +50,15 @@ class RegisterView(APIView):
             response = {
                 "status": True,
                 "message": "Email Sent!!verify otp to active your account",
+                "data": None
             }
             return Response(data=response, status=status.HTTP_200_OK)
 
         else:
             # Return error response with serializer errors
-            response = {"status": False, "message": serializer.errors, "data": None}
+            response = {"status": False,
+                        "message": serializer.errors,
+                        "data": None}
             return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -101,6 +104,7 @@ class ResendOtpUserActivationView(APIView):
             response = {
                 "status": True,
                 "message": "Email Sent!!verify otp to active your account",
+                "data": None
             }
             return Response(data=response, status=status.HTTP_200_OK)
         else:
@@ -126,7 +130,9 @@ class VerifyUserActivationOtpView(APIView):
 
         # check if the user not entered data
         if user_otp is None:
-            response = {"status": False, "message": "Provide OTP!!", "data": None}
+            response = {"status": False,
+                        "message": "Provide OTP!!",
+                        "data": None}
             return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
 
         # Get the VerifyOtp object with the given OTP
@@ -146,6 +152,7 @@ class VerifyUserActivationOtpView(APIView):
                 response = {
                     "status": True,
                     "message": "OTP Verified!!Registration is successfull!!",
+                    "data": None
                 }
                 return Response(data=response, status=status.HTTP_200_OK)
 
@@ -159,7 +166,10 @@ class VerifyUserActivationOtpView(APIView):
                                 status=status.HTTP_400_BAD_REQUEST)
         else:
             # If the OTP is incorrect, return an error message
-            response = {"status": False, "message": "OTP is incorrect!!", "data": None}
+            response = {"status": False,
+                        "message": "OTP is incorrect!!",
+                        "data": None}
+
             return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -262,6 +272,7 @@ class ForgetPasswordView(APIView):
             response = {
                 "status": True,
                 "message": "Email sent to Reset your password!!",
+                "data": None
             }
             return Response(data=response, status=status.HTTP_200_OK)
         else:
@@ -316,6 +327,7 @@ class ResendOtpForgetPasswordView(APIView):
             response = {
                 "status": True,
                 "message": "Email sent to Reset your password!!",
+                "data": None
             }
             return Response(data=response, status=status.HTTP_200_OK)
         else:
@@ -361,7 +373,7 @@ class VerifyOtpView(APIView):
                 response = {
                     "status": True,
                     "message": "OTP Verified SuccessFully!!",
-                    "Token": token.key,
+                    "data": {"token": token.key},
                 }
                 return Response(data=response, status=status.HTTP_200_OK)
             else:
@@ -411,6 +423,7 @@ class ResetPasswordView(APIView):
             response = {
                 "status": True,
                 "message": "Password Changed Successfully.",
+                "data": None
             }
             return Response(data=response, status=status.HTTP_200_OK)
         else:
@@ -438,5 +451,7 @@ class LogoutView(APIView):
         token.delete()
 
         # Return success response
-        response = {"status": True, "message": "Logout is Successful!!"}
+        response = {"status": True,
+                    "message": "Logout is Successful!!",
+                    "data": None}
         return Response(data=response, status=status.HTTP_200_OK)

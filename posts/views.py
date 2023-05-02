@@ -6,7 +6,7 @@ from rest_framework import status
 from posts.models import Post
 from django.db.models import Q
 from posts.serializers import PostSerializer, LikeSerializer, CommentSerializer
-from posts.pagination import CustomPagination
+from services.pagination import CustomPagination
 import threading
 from services.send_mail import send_mail
 
@@ -28,11 +28,11 @@ class PostView(APIView):
         returns success response else return error response
         '''
         if serializer.is_valid():
-            self.perform_create(serializer)
             serializer.save(user=request.user)
             # Post.save()
             response = {"status": True,
-                        "message": "Your Post added successfully"}
+                        "message": "Your Post added successfully",
+                        "data": serializer.data}
             return Response(data=response, status=status.HTTP_201_CREATED)
         else:
             response = {"status": False,
@@ -41,45 +41,107 @@ class PostView(APIView):
             return Response(data=response,
                             status=status.HTTP_400_BAD_REQUEST)
 
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+    def delete(self, request, pk):
+        if Post.objects.filter(id=pk).exists():
+            post = Post.objects.get(id=pk)
+            post.delete()
+            response = {
+                "status": True,
+                "message": "Post deleted successfully!!",
+                "data": None
+            }
+            return Response(response, status=status.HTTP_200_OK)
+        else:
+            response = {
+                "status": False,
+                "message": "Provide correct user id to delete post",
+                "data": None
+            }
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
 
 class PostSearchView(APIView):
 
-    # Only Authenticated User can search Post
-    # permission_classes = [IsAuthenticated]
+    def get(self, request, query):
+        # Define a search query using Django's Q objects
+        q = Q(content__icontains=query) | Q(user__username__icontains=query)
+        # Retrieve the matching posts using the search query
+        posts = Post.objects.filter(q)
+
+        # Add pagination to tasks queryset
+        paginator = CustomPagination()
+        paginated_queryset = paginator.paginate_queryset(posts, request)
+        serializer = PostSerializer(paginated_queryset, many=True)
+
+        # Serialize the matching posts and return them as a JSON response
+        response = {
+            "status": True,
+            "message": f"Posts based on your search query: {query}",
+            "data": serializer.data
+        }
+        return paginator.get_paginated_response(data=response)
+
+
+class PostListView(APIView):
 
     def get(self, request):
-        query = request.data.get('search')
-        if query:
-            # Define a search query using Django's Q objects
-            q = Q(content__icontains=query) | Q(user__username__icontains=query)
-            # Retrieve the matching posts using the search query
-            posts = Post.objects.filter(q)
-        else:
-            # If no query is provided, return all posts
-            posts = Post.objects.all()
-        if posts:
-            # Add pagination to tasks queryset
-            paginator = CustomPagination()
-            paginated_queryset = paginator.paginate_queryset(posts, request)
-            serializer = PostSerializer(paginated_queryset, many=True)
+        posts = Post.objects.all()
 
-            # Serialize the matching posts and return them as a JSON response
-            response = {
-                "status": True,
-                "message": "The data of Post based on your serach",
-                "data": serializer.data
-            }
-            return paginator.get_paginated_response(data=response)
-        else:
-            response = {
-                "status": True,
-                "message": "You haven't add any Post yet",
-                "data": None
-            }
-            return Response(data=response, status=status.HTTP_200_OK)
+        # Add pagination to tasks queryset
+        paginator = CustomPagination()
+        paginated_queryset = paginator.paginate_queryset(posts, request)
+        serializer = PostSerializer(paginated_queryset, many=True)
+
+        # Serialize the matching posts and return them as a JSON response
+        response = {
+            "status": True,
+            "message": "Display of All Posts",
+            "data": serializer.data
+        }
+        return paginator.get_paginated_response(data=response)
+
+
+class HashtagSearchView(APIView):
+
+    def get(self, request, search):
+        # Retrieve the matching posts using the search query
+        posts = Post.objects.filter(hashtags__name__iexact=search)
+
+        # Add pagination to tasks queryset
+        paginator = CustomPagination()
+        paginated_queryset = paginator.paginate_queryset(posts, request)
+        serializer = PostSerializer(paginated_queryset, many=True)
+
+        # Serialize the matching posts and return them as a JSON response
+        response = {
+            "status": True,
+            "message": f"Posts based on your search query:#{search}",
+            "data": serializer.data
+        }
+        return paginator.get_paginated_response(data=response)
+
+
+class UserPostSearchView(APIView):
+
+    # Only Authenticated User can add Post
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Retrieve the matching posts using the search query
+        posts = Post.objects.filter(user=request.user)
+        print(posts)
+        # Add pagination to tasks queryset
+        paginator = CustomPagination()
+        paginated_queryset = paginator.paginate_queryset(posts, request)
+        serializer = PostSerializer(paginated_queryset, many=True)
+
+        # Serialize the matching posts and return them as a JSON response
+        response = {
+            "status": True,
+            "message": f"Posts of {request.user}",
+            "data": serializer.data
+        }
+        return paginator.get_paginated_response(data=response)
 
 
 class LikeView(APIView):
@@ -111,7 +173,8 @@ class LikeView(APIView):
                     }).start()
                 response = {
                     "status": True,
-                    "message": "Your Like is added in the post"
+                    "message": "Your Like is added in the post",
+                    "data": None
                 }
                 return Response(data=response, status=status.HTTP_201_CREATED)
             else:
@@ -156,7 +219,8 @@ class CommentView(APIView):
 
                 response = {
                     "status": True,
-                    "message": "Your Comment is added in the post"
+                    "message": "Your Comment is added in the post",
+                    "data": None
                 }
                 return Response(data=response, status=status.HTTP_201_CREATED)
             else:
@@ -174,3 +238,24 @@ class CommentView(APIView):
                 "data": None
             }
         return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
+
+
+class TrendingPostView(APIView):
+
+    def get(self, request):
+
+        # Get Posts with maximum Likes and comments and display it as trending
+        posts = Post.objects.order_by('-total_likes', '-total_comments')[:5]
+
+        # Add pagination to tasks queryset
+        paginator = CustomPagination()
+        paginated_queryset = paginator.paginate_queryset(posts, request)
+        serializer = PostSerializer(paginated_queryset, many=True)
+
+        # Serialize the matching posts and return them as a JSON response
+        response = {
+            "status": True,
+            "message": "Display of Trending Posts",
+            "data": serializer.data
+        }
+        return paginator.get_paginated_response(data=response)

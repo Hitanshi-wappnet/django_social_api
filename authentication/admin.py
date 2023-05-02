@@ -16,5 +16,15 @@ class UserActivationOtpAdmin(admin.ModelAdmin):
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ["id", "email", "username" ,"first_name", "last_name",
-                    "bio", "birth_date", "followers", "following"]
+    list_display = [
+        "id",
+        "email",
+        "username",
+        "first_name",
+        "last_name",
+        "bio",
+        "birth_date",
+        "followers",
+        "following",
+        "total_posts",
+    ]

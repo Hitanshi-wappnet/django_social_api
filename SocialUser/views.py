@@ -9,6 +9,7 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Q
 import threading
 from services.send_mail import send_mail
+from services.pagination import CustomPagination
 
 
 class FollowUserView(APIView):
@@ -47,7 +48,8 @@ class FollowUserView(APIView):
                 serializer.save(follower=follower, following=following)
                 response = {
                     "status": True,
-                    "message": f'You are now following {following}.'
+                    "message": f'You are now following {following}.',
+                    "data": None
                 }
                 return Response(data=response, status=status.HTTP_202_ACCEPTED)
             else:
@@ -102,7 +104,8 @@ class UnfollowUserView(APIView):
                 following_user.save()
                 response = {
                     "status": True,
-                    "message": f'You are now unfollowing {following}.'
+                    "message": f'You are now unfollowing {following}.',
+                    "data": None
                 }
                 return Response(data=response, status=status.HTTP_202_ACCEPTED)
             else:
@@ -246,3 +249,34 @@ class ListMessageView(APIView):
                 'data': None
             }
             return Response(data=response, status=status.HTTP_400_BAD_REQUEST)
+
+
+class TrendingUserView(APIView):
+
+    def get(self, request):
+
+        # Get Users with maximum followers and posts and display it as trending
+        users = User.objects.order_by('-followers', '-total_posts')[:3]
+
+        # Use the custom pagination class to paginate the users queryset
+        paginator = CustomPagination()
+        paginated_users = paginator.paginate_queryset(users, request)
+
+        # Serialize the users queryset into a list of user data dictionaries
+        user_data_list = []
+        for user in paginated_users:
+            user_data = {
+                "user": user.username,
+                "bio": user.bio,
+                "followers": user.followers,
+                "posts": user.total_posts
+            }
+            user_data_list.append(user_data)
+
+        # send successful response
+        response = {
+            "status": True,
+            "message": "Display of Trending Posts",
+            "data": user_data_list
+        }
+        return paginator.get_paginated_response(data=response)

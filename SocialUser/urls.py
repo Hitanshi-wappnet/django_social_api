@@ -12,6 +12,7 @@ urlpatterns = [
      path("receivemessage/<int:pk>/", views.ReceiveMessageView.as_view(),
           name="receivemessage"),
      path("viewmessages/<int:pk>/", views.ListMessageView.as_view(),
-          name="viewmessage")
+          name="viewmessage"),
+     path("trending/", views.TrendingUserView.as_view(), name="trending_user")
      # path("ws/chat/<int:pk>/", consumer.ChatConsumer.as_asgi(), name="chat"),
 ]

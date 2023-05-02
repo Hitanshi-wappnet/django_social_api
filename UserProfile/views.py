@@ -71,7 +71,8 @@ class UserProfileView(APIView):
 
                 # Return success response
                 response = {"status": True,
-                            "message": "User data updated successfully!!"}
+                            "message": "User data updated successfully!!",
+                            "data": serializer.data}
                 return Response(data=response, status=status.HTTP_202_ACCEPTED)
 
             else:
@@ -104,7 +105,8 @@ class UserProfileView(APIView):
 
                 # Return success response
                 response = {"status": True,
-                            "message": "User data updated successfully!!"}
+                            "message": "User data updated successfully!!",
+                            "data": serializer.data}
                 return Response(data=response, status=status.HTTP_202_ACCEPTED)
 
             else:
@@ -131,7 +133,8 @@ class UserProfileView(APIView):
 
             # Return success response
             response = {"status": True,
-                        "message": "User data of given id deleted"}
+                        "message": "User data of given id deleted",
+                        "data": None}
             return Response(data=response, status=status.HTTP_200_OK)
 
         else:
@@ -176,6 +179,7 @@ class ChangePasswordView(APIView):
                 response = {
                     "status": True,
                     "message": "Password Changed Successfully.",
+                    "data": None,
                 }
                 return Response(data=response, status=status.HTTP_200_OK)
             else:
